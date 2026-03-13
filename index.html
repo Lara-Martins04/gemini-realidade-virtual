@@ -59,17 +59,6 @@
     <a-entity camera></a-entity>
   </a-scene>
 
-  <div class="fixed top-8 w-full flex justify-center z-10 pointer-events-none px-4">
-    <div class="bg-white text-black font-bold py-3 px-6 rounded-full shadow-lg flex items-center gap-3 pointer-events-auto">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-      </svg>
-      <span class="text-sm">Aponte para o Marcador</span>
-    </div>
-  </div>
-
   <div class="fixed bottom-0 w-full bg-white z-10 rounded-t-3xl shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
     <div class="p-5 md:p-8 max-w-3xl mx-auto">
       <h2 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest text-center md:text-left">
@@ -108,6 +97,7 @@
         
         btn.onclick = () => mudarFase(fase.id);
 
+        // Usando emojis como placeholder para as imagens reais das fases
         btn.innerHTML = `
           <div class="text-3xl md:text-4xl mb-1">${fase.icone}</div>
         `;
@@ -132,4 +122,3 @@
   </script>
 </body>
 </html>
-

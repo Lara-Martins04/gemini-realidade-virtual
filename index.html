@@ -1,90 +1,135 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aedes AR - Ciclo de Vida</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AR: Ciclo de Vida do Aedes aegypti</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
-    <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        #ui-container {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 450px; background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px); border-radius: 25px; padding: 10px;
-            display: flex; justify-content: space-around; z-index: 9999;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        .phase-btn {
-            background: none; border: none; color: white; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; opacity: 0.5;
-            transition: 0.3s; padding: 10px;
-        }
-        .phase-btn.active { opacity: 1; transform: scale(1.1); }
-        .icon-box {
-            width: 50px; height: 50px; background: white; border-radius: 12px;
-            margin-bottom: 5px; display: flex; align-items: center; justify-content: center;
-        }
-        .icon-box img { width: 70%; height: 70%; object-fit: contain; }
-        .label { font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        #msg { 
-            position: fixed; top: 20px; width: 100%; text-align: center; 
-            color: white; z-index: 1000; font-size: 14px; text-shadow: 0 0 5px black;
-        }
-    </style>
+  <style>
+    /* Oculta a barra de rolagem horizontal mantendo a funcionalidade */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Garante que o canvas do A-Frame fique no fundo */
+    .a-canvas {
+      z-index: 0 !important;
+    }
+    
+    /* Remove a interface de debug padrão do AR.js/A-Frame caso apareça */
+    .a-enter-vr {
+      display: none !important;
+    }
+  </style>
 </head>
+<body class="m-0 overflow-hidden font-sans bg-black">
 
-<body>
-    <div id="msg">Aponte para a imagem de ativação</div>
+  <a-scene 
+    embedded 
+    arjs="sourceType: webcam; debugUIEnabled: false; trackingMethod: best;"
+    renderer="antialias: true; alpha: true"
+  >
+    <a-assets>
+      <a-asset-item id="glb-ovo" src="https://modelviewer.dev/shared-assets/models/shishkebab.glb"></a-asset-item>
+      <a-asset-item id="glb-larva" src="https://modelviewer.dev/shared-assets/models/Horse.glb"></a-asset-item>
+      <a-asset-item id="glb-pupa" src="https://modelviewer.dev/shared-assets/models/RobotExpressive.glb"></a-asset-item>
+      <a-asset-item id="glb-mosquito" src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"></a-asset-item>
+    </a-assets>
 
-    <div id="ui-container">
-        <button class="phase-btn active" onclick="changePhase('ovo', this)">
-            <div class="icon-box"><img src="https://img.icons8.com/color/96/egg.png"></div>
-            <span class="label">Ovo</span>
-        </button>
-        <button class="phase-btn" onclick="changePhase('larva', this)">
-            <div class="icon-box"><img src="https://img.icons8.com/color/48/caterpillar.png"></div>
-            <span class="label">Larva</span>
-        </button>
-        <button class="phase-btn" onclick="changePhase('pupa', this)">
-            <div class="icon-box"><img src="https://img.icons8.com/color/48/pupa.png"></div>
-            <span class="label">Pupa</span>
-        </button>
-        <button class="phase-btn" onclick="changePhase('mosquito', this)">
-            <div class="icon-box"><img src="https://img.icons8.com/color/48/mosquito.png"></div>
-            <span class="label">Mosquito</span>
-        </button>
+    <a-marker preset="hiro">
+      <a-entity 
+        id="modelo-ativo"
+        gltf-model="#glb-ovo"
+        scale="0.5 0.5 0.5"
+        position="0 0 0"
+        rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <div class="fixed top-8 w-full flex justify-center z-10 pointer-events-none px-4">
+    <div class="bg-white text-black font-bold py-3 px-6 rounded-full shadow-lg flex items-center gap-3 pointer-events-auto">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+      </svg>
+      <span class="text-sm">Aponte para o Marcador</span>
     </div>
+  </div>
 
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+  <div class="fixed bottom-0 w-full bg-white z-10 rounded-t-3xl shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
+    <div class="p-5 md:p-8 max-w-3xl mx-auto">
+      <h2 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest text-center md:text-left">
+        Fases do Ciclo
+      </h2>
+      
+      <div id="nav-container" class="flex gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory pb-2 justify-start md:justify-center">
+        </div>
+    </div>
+  </div>
+
+  <script>
+    // Definição das 4 fases solicitadas
+    const fases = [
+      { id: 'ovo', nome: 'Ovo', asset: '#glb-ovo', icone: '🥚' },
+      { id: 'larva', nome: 'Larva', asset: '#glb-larva', icone: '🐛' },
+      { id: 'pupa', nome: 'Pupa', asset: '#glb-pupa', icone: '🪲' },
+      { id: 'mosquito', nome: 'Mosquito', asset: '#glb-mosquito', icone: '🦟' }
+    ];
+
+    let faseAtiva = 'ovo';
+    const containerNav = document.getElementById('nav-container');
+    const modeloAtivo = document.getElementById('modelo-ativo');
+
+    function renderizarBotoes() {
+      containerNav.innerHTML = '';
+      
+      fases.forEach(fase => {
+        const isAtivo = fase.id === faseAtiva;
+        const btn = document.createElement('button');
         
-        <a-assets>
-            <a-asset-item id="m-ovo" src="ovo.glb"></a-asset-item>
-            <a-asset-item id="m-larva" src="larva.glb"></a-asset-item>
-            <a-asset-item id="m-pupa" src="pupa.glb"></a-asset-item>
-            <a-asset-item id="m-mosquito" src="mosquito.glb"></a-asset-item>
-        </a-assets>
+        // Classes baseadas na imagem de referência: quadrado de cantos arredondados, fundo cinza claro, borda azul quando ativo
+        btn.className = `snap-center shrink-0 flex flex-col items-center justify-center w-20 h-20 md:w-24 md:h-24 rounded-2xl transition-all duration-300 bg-slate-50 border-2 ${
+          isAtivo ? 'border-blue-500 shadow-md transform scale-105' : 'border-gray-200 hover:bg-slate-100'
+        }`;
+        
+        btn.onclick = () => mudarFase(fase.id);
 
-        <a-marker type="pattern" url="marcador.patt">
-            <a-entity id="main-model" position="0 0 0" scale="1 1 1"
-                      gltf-model="#m-ovo"
-                      animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
-            </a-entity>
-        </a-marker>
+        btn.innerHTML = `
+          <div class="text-3xl md:text-4xl mb-1">${fase.icone}</div>
+        `;
+        
+        containerNav.appendChild(btn);
+      });
+    }
 
-        <a-entity light="type: ambient; intensity: 1;"></a-entity>
-        <a-entity light="type: directional; intensity: 0.5; position: 1 2 1"></a-entity>
-        <a-entity camera></a-entity>
-    </a-scene>
+    function mudarFase(idFase) {
+      faseAtiva = idFase;
+      const faseSelecionada = fases.find(f => f.id === idFase);
+      
+      // Atualiza o atributo do A-Frame para trocar o modelo 3D
+      modeloAtivo.setAttribute('gltf-model', faseSelecionada.asset);
+      
+      // Re-renderiza a UI para atualizar o botão com borda azul
+      renderizarBotoes();
+    }
 
-    <script>
-        function changePhase(id, el) {
-            document.getElementById('main-model').setAttribute('gltf-model', `#m-${id}`);
-            document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-        }
-    </script>
+    // Inicializa a interface
+    renderizarBotoes();
+  </script>
 </body>
 </html>
 

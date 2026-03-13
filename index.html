@@ -1,193 +1,89 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Ciclo do Aedes aegypti em AR</title>
-    
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Aedes AR - Ciclo de Vida</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
     <style>
-        /* Estilos Globais e Reset */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { margin: 0; overflow: hidden; background-color: #000; }
-
-        /* Interface do Usuário (UI) sobreposta à câmera */
-        #ui-layer {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 9999;
-            pointer-events: none; /* Permite clicar no canvas 3D se necessário */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        /* Elementos interativos voltam a receber cliques */
-        .interactive { pointer-events: auto; }
-
-        /* Cabeçalho */
-        header {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-bottom-left-radius: 15px;
-            border-bottom-right-radius: 15px;
-        }
-        h1 { font-size: 1.2rem; font-weight: 600; color: #333; letter-spacing: 2px; text-transform: uppercase; }
-
-        /* Tela de Início */
-        #start-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 10000; transition: opacity 0.5s ease;
-        }
-        #start-btn {
-            background-color: #4CAF50; color: white; border: none;
-            padding: 15px 40px; font-size: 1.2rem; border-radius: 30px;
-            cursor: pointer; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
-            transition: transform 0.2s, background-color 0.2s;
-        }
-        #start-btn:active { transform: scale(0.95); }
-
-        /* Controles do Ciclo (Ocultos até iniciar) */
-        #controls-container {
-            display: none; flex-direction: column; align-items: center;
-            margin-top: 15px; width: 100%; padding: 0 10px;
-        }
-        .buttons-row {
-            display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 400px;
-            overflow-x: auto; padding-bottom: 5px;
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        #ui-container {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 450px; background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px); border-radius: 25px; padding: 10px;
+            display: flex; justify-content: space-around; z-index: 9999;
+            border: 1px solid rgba(255,255,255,0.2);
         }
         .phase-btn {
-            background-color: #f0f0f0; border: 2px solid transparent;
-            padding: 10px 15px; border-radius: 20px; font-size: 0.9rem;
-            color: #555; cursor: pointer; display: flex; align-items: center; gap: 5px;
-            transition: all 0.3s ease; white-space: nowrap; font-weight: 500;
+            background: none; border: none; color: white; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; opacity: 0.5;
+            transition: 0.3s; padding: 10px;
         }
-        .phase-btn.active {
-            background-color: #e8f5e9; border-color: #4CAF50; color: #2e7d32;
+        .phase-btn.active { opacity: 1; transform: scale(1.1); }
+        .icon-box {
+            width: 50px; height: 50px; background: white; border-radius: 12px;
+            margin-bottom: 5px; display: flex; align-items: center; justify-content: center;
         }
-
-        /* Feedback do Marcador */
-        #marker-feedback {
-            margin-top: 15px; padding: 8px 20px; border-radius: 20px;
-            background-color: #ff9800; color: white; font-size: 0.85rem; font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        #marker-feedback.found { background-color: #4CAF50; }
-
-        /* Rodapé */
-        footer {
-            text-align: center; padding: 15px;
-            background: linear-gradient(transparent, rgba(0,0,0,0.6));
-            color: white; font-size: 0.9rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        .icon-box img { width: 70%; height: 70%; object-fit: contain; }
+        .label { font-size: 10px; font-weight: bold; text-transform: uppercase; }
+        #msg { 
+            position: fixed; top: 20px; width: 100%; text-align: center; 
+            color: white; z-index: 1000; font-size: 14px; text-shadow: 0 0 5px black;
         }
     </style>
 </head>
+
 <body>
+    <div id="msg">Aponte para a imagem de ativação</div>
 
-    <div id="start-screen" class="interactive">
-        <h1 style="margin-bottom: 20px;">PLACE IT IN YOUR ROOM</h1>
-        <p style="margin-bottom: 30px; color: #666; text-align: center; max-width: 80%;">Permita o acesso à câmera para visualizar o ciclo do mosquito.</p>
-        <button id="start-btn">Iniciar AR</button>
+    <div id="ui-container">
+        <button class="phase-btn active" onclick="changePhase('ovo', this)">
+            <div class="icon-box"><img src="https://img.icons8.com/color/96/egg.png"></div>
+            <span class="label">Ovo</span>
+        </button>
+        <button class="phase-btn" onclick="changePhase('larva', this)">
+            <div class="icon-box"><img src="https://img.icons8.com/color/48/caterpillar.png"></div>
+            <span class="label">Larva</span>
+        </button>
+        <button class="phase-btn" onclick="changePhase('pupa', this)">
+            <div class="icon-box"><img src="https://img.icons8.com/color/48/pupa.png"></div>
+            <span class="label">Pupa</span>
+        </button>
+        <button class="phase-btn" onclick="changePhase('mosquito', this)">
+            <div class="icon-box"><img src="https://img.icons8.com/color/48/mosquito.png"></div>
+            <span class="label">Mosquito</span>
+        </button>
     </div>
 
-    <div id="ui-layer">
-        <header>
-            <h1>Place it in your room</h1>
-            <div id="controls-container" class="interactive">
-                <div class="buttons-row">
-                    <button class="phase-btn active" data-model="ovo">🥚 Ovo</button>
-                    <button class="phase-btn" data-model="larva">🐛 Larva</button>
-                    <button class="phase-btn" data-model="pupa">🪹 Pupa</button>
-                    <button class="phase-btn" data-model="mosquito">🦟 Mosquito</button>
-                </div>
-                <div id="marker-feedback">Aponte para o marcador Hiro</div>
-            </div>
-        </header>
-
-        <footer>
-            Toque nos botões para ver cada fase
-        </footer>
-    </div>
-
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; alpha: true">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
         
         <a-assets>
-            <a-asset-item id="model-ovo" src="assets/ovo.glb"></a-asset-item>
-            <a-asset-item id="model-larva" src="assets/larva.glb"></a-asset-item>
-            <a-asset-item id="model-pupa" src="assets/pupa.glb"></a-asset-item>
-            <a-asset-item id="model-mosquito" src="assets/mosquito.glb"></a-asset-item>
+            <a-asset-item id="m-ovo" src="ovo.glb"></a-asset-item>
+            <a-asset-item id="m-larva" src="larva.glb"></a-asset-item>
+            <a-asset-item id="m-pupa" src="pupa.glb"></a-asset-item>
+            <a-asset-item id="m-mosquito" src="mosquito.glb"></a-asset-item>
         </a-assets>
 
-        <a-marker preset="hiro" id="ar-marker">
-            <a-entity id="mosquito-entity" 
-                      gltf-model="#model-ovo" 
-                      scale="0.5 0.5 0.5" 
-                      position="0 0 0"
-                      animation="property: rotation; to: 0 360 0; loop: true; dur: 8000; easing: linear;">
+        <a-marker type="pattern" url="marcador.patt">
+            <a-entity id="main-model" position="0 0 0" scale="1 1 1"
+                      gltf-model="#m-ovo"
+                      animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
             </a-entity>
         </a-marker>
 
+        <a-entity light="type: ambient; intensity: 1;"></a-entity>
+        <a-entity light="type: directional; intensity: 0.5; position: 1 2 1"></a-entity>
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const startScreen = document.getElementById('start-screen');
-            const startBtn = document.getElementById('start-btn');
-            const controlsContainer = document.getElementById('controls-container');
-            const phaseButtons = document.querySelectorAll('.phase-btn');
-            const mosquitoEntity = document.getElementById('mosquito-entity');
-            const marker = document.getElementById('ar-marker');
-            const markerFeedback = document.getElementById('marker-feedback');
-
-            // 1. Iniciar Experiência AR
-            startBtn.addEventListener('click', () => {
-                startScreen.style.opacity = '0';
-                setTimeout(() => {
-                    startScreen.style.display = 'none';
-                    controlsContainer.style.display = 'flex';
-                }, 500);
-            });
-
-            // 2. Trocar Modelos com Transição Suave
-            phaseButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Atualiza UI dos botões
-                    phaseButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Descobre qual modelo carregar
-                    const modelName = this.getAttribute('data-model');
-                    
-                    // Efeito simples de transição: diminui a escala, troca o modelo, aumenta a escala
-                    mosquitoEntity.setAttribute('animation__scale', 'property: scale; to: 0 0 0; dur: 200; easing: easeInOutQuad');
-                    
-                    setTimeout(() => {
-                        mosquitoEntity.setAttribute('gltf-model', `#model-${modelName}`);
-                        mosquitoEntity.setAttribute('animation__scale', 'property: scale; to: 0.5 0.5 0.5; dur: 300; easing: easeOutElastic');
-                    }, 200);
-                });
-            });
-
-            // 3. Feedback de Detecção do Marcador
-            marker.addEventListener('markerFound', () => {
-                markerFeedback.textContent = "Marcador Detectado!";
-                markerFeedback.classList.add('found');
-                // Adiciona um leve pulo ao modelo ao ser encontrado
-                mosquitoEntity.setAttribute('animation__pop', 'property: position; from: 0 -0.5 0; to: 0 0 0; dur: 500; easing: easeOutElastic');
-            });
-
-            marker.addEventListener('markerLost', () => {
-                markerFeedback.textContent = "Aponte para o marcador Hiro";
-                markerFeedback.classList.remove('found');
-            });
-        });
+        function changePhase(id, el) {
+            document.getElementById('main-model').setAttribute('gltf-model', `#m-${id}`);
+            document.querySelectorAll('.phase-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
     </script>
 </body>
 </html>
